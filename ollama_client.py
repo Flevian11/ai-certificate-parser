@@ -1,244 +1,268 @@
-from fastapi import FastAPI, UploadFile, File, Request
-from fastapi.responses import JSONResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.exceptions import RequestValidationError
+import json
+import re
+import requests
+from typing import Any, Dict, Optional
 
-from pathlib import Path
-import shutil
-import uuid
-import traceback
-from datetime import datetime, timedelta
+OLLAMA_URL = "http://localhost:11434/api/generate"
+MODEL = "phi3:latest"
 
-from parser import extract_text
-from ollama_client import llm_extract_json
-from legal_generator import generate_verification_letter
-from pdf_generator import generate_verification_pdf
-
-app = FastAPI(title="AI Certificate Parser")
-
-# -------------------------
-# Paths / Folders
-# -------------------------
-BASE_DIR = Path(__file__).parent
-UPLOAD_DIR = BASE_DIR / "uploads"
-PDF_DIR = BASE_DIR / "generated_pdfs"
-STATIC_DIR = BASE_DIR / "static"
-
-UPLOAD_DIR.mkdir(exist_ok=True)
-PDF_DIR.mkdir(exist_ok=True)
-STATIC_DIR.mkdir(exist_ok=True)
-
-# Serve static folder
-app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
-
-ALLOWED_EXT = {".pdf", ".png", ".jpg", ".jpeg", ".webp"}
-MIN_OCR_CHARS = 60  # too little extracted text => treat as OCR failure
+# Keep output consistent for PDF + legal doc
+TARGET_FIELDS = [
+    "issuing_body",
+    "document_title",
+    "certificate_number",
+    "full_name",
+    "national_id",
+    "institution",
+    "degree_or_certificate",
+    "course_or_program",
+    "issue_date",
+    "valid_until",
+    "status_statement",
+    "contact_email",
+    "contact_phone",
+    "website",
+]
 
 
-# -------------------------
-# Global JSON error handlers
-# -------------------------
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    return JSONResponse(
-        status_code=422,
-        content={
-            "error": "VALIDATION_ERROR",
-            "details": exc.errors(),
-            "message": "Request validation failed.",
-        },
-    )
+def _strip_code_fences(s: str) -> str:
+    s = (s or "").strip()
+    s = re.sub(r"^```(?:json)?\s*", "", s, flags=re.IGNORECASE)
+    s = re.sub(r"\s*```$", "", s)
+    return s.strip()
 
 
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    # Always JSON (prevents frontend null/extracted errors)
-    return JSONResponse(
-        status_code=500,
-        content={
-            "error": "SERVER_ERROR",
-            "message": str(exc),
-        },
-    )
+def _try_parse_json(text: str) -> Optional[Dict[str, Any]]:
+    text = _strip_code_fences(text)
+
+    # direct JSON
+    try:
+        obj = json.loads(text)
+        if isinstance(obj, dict):
+            return obj
+    except Exception:
+        pass
+
+    # extract first {...} block
+    m = re.search(r"\{.*\}", text, flags=re.DOTALL)
+    if m:
+        blob = m.group(0)
+        try:
+            obj = json.loads(blob)
+            if isinstance(obj, dict):
+                return obj
+        except Exception:
+            return None
+    return None
 
 
-# -------------------------
-# Basic routes
-# -------------------------
-@app.get("/")
-def home():
-    return {"status": "ok", "message": "Open /ui for UI or /docs for API docs"}
+def _normalize(d: Dict[str, Any]) -> Dict[str, Any]:
+    out: Dict[str, Any] = {}
+
+    for k, v in (d or {}).items():
+        key = str(k).strip()
+        if isinstance(v, str):
+            vv = v.strip()
+            if vv.lower() in {"n/a", "na", "none", "null", "unknown", "-"}:
+                vv = ""
+            out[key] = vv
+        else:
+            out[key] = v
+
+    # common aliases
+    aliases = {
+        "name": "full_name",
+        "id_no": "national_id",
+        "id_number": "national_id",
+        "serial_no": "certificate_number",
+        "certificate_serial": "certificate_number",
+        "valid_till": "valid_until",
+        "valid_to": "valid_until",
+        "issuer": "issuing_body",
+        "title": "document_title",
+        "program": "course_or_program",
+        "course": "course_or_program",
+        "qualification": "degree_or_certificate",
+        "degree": "degree_or_certificate",
+        "email": "contact_email",
+        "phone": "contact_phone",
+    }
+
+    for src, dst in aliases.items():
+        if dst not in out and src in out and isinstance(out[src], str) and out[src].strip():
+            out[dst] = out[src].strip()
+
+    # build final dict with fixed keys
+    final: Dict[str, Any] = {f: "" for f in TARGET_FIELDS}
+    for f in TARGET_FIELDS:
+        val = out.get(f, "")
+        final[f] = val.strip() if isinstance(val, str) else val
+
+    # quality fields (optional)
+    conf = out.get("confidence")
+    if isinstance(conf, (int, float)):
+        final["confidence"] = max(0.0, min(1.0, float(conf)))
+
+    missing = out.get("missing_fields")
+    if isinstance(missing, list):
+        final["missing_fields"] = [str(x) for x in missing][:50]
+    else:
+        final["missing_fields"] = [k for k in TARGET_FIELDS if not str(final.get(k, "")).strip()]
+
+    notes = out.get("notes")
+    if isinstance(notes, str) and notes.strip():
+        final["notes"] = notes.strip()
+
+    return final
 
 
-@app.get("/ui")
-def ui():
-    index_path = STATIC_DIR / "index.html"
-    if not index_path.exists():
-        return JSONResponse(
-            status_code=404,
-            content={"error": "UI_NOT_FOUND", "message": "static/index.html not found"},
-        )
-    return FileResponse(str(index_path))
-
-
-@app.get("/health")
-def health():
-    return {"status": "healthy"}
-
-
-# -------------------------
-# Debug OCR text
-# -------------------------
-@app.post("/debug-text")
-async def debug_text(file: UploadFile = File(...)):
-    ext = Path(file.filename).suffix.lower()
-    if ext not in ALLOWED_EXT:
-        return JSONResponse(
-            status_code=400,
-            content={"error": "UNSUPPORTED_FILE", "message": f"Unsupported file type: {ext}"},
-        )
-
-    safe_name = Path(file.filename).name
-    save_path = UPLOAD_DIR / safe_name
-
-    with open(save_path, "wb") as f:
-        shutil.copyfileobj(file.file, f)
-
-    raw_text = extract_text(str(save_path)) or ""
-    return {"filename": safe_name, "text_preview": raw_text[:8000]}
-
-
-# -------------------------
-# Download PDF
-# -------------------------
-@app.get("/download/{doc_id}")
-def download_pdf(doc_id: str):
-    pdf_path = PDF_DIR / f"verification_{doc_id}.pdf"
-    if not pdf_path.exists():
-        return JSONResponse(
-            status_code=404,
-            content={"error": "PDF_NOT_FOUND", "message": "PDF not found"},
-        )
-
-    return FileResponse(
-        path=str(pdf_path),
-        media_type="application/pdf",
-        filename=f"verification_{doc_id}.pdf",
-    )
-
-
-# -------------------------
-# Main pipeline
-# -------------------------
-@app.post("/upload")
-async def upload(file: UploadFile = File(...)):
+def _fallback_extract(text: str) -> Dict[str, Any]:
     """
-    Upload -> OCR -> LLM -> Legal Letter -> HELB-style PDF
-    Always returns JSON with:
-      filename, extracted, legal_document, pdf_url
+    Regex fallback to return whatever is available without guessing.
     """
-    response_payload = {
-        "filename": None,
-        "extracted": {},
-        "legal_document": "",
-        "pdf_url": None,
+    t = text or ""
+
+    def find(patterns):
+        for p in patterns:
+            m = re.search(p, t, flags=re.IGNORECASE)
+            if m:
+                return m.group(1).strip()
+        return ""
+
+    cert_no = find([
+        r"Certificate\s*Serial\s*No\.?\s*[:\-]?\s*([A-Z0-9\/\-]+)",
+        r"Serial\s*No\.?\s*[:\-]?\s*([A-Z0-9\/\-]+)",
+        r"Ref\.?\s*No\.?\s*[:\-]?\s*([A-Z0-9\/\-]+)",
+    ])
+
+    national_id = find([
+        r"National\s*ID\s*(?:NO\.?|No\.?)\s*[:\-]?\s*([0-9A-Z\-\/]+)",
+        r"ID\s*(?:NO\.?|No\.?)\s*[:\-]?\s*([0-9A-Z\-\/]+)",
+    ])
+
+    # issuer from early lines (best long uppercase-ish line)
+    lines = [ln.strip() for ln in t.splitlines() if ln.strip()]
+    head = lines[:8]
+    issuing_body = ""
+    for ln in head:
+        if len(ln) >= 12 and sum(ch.isalpha() for ch in ln) >= 8:
+            issuing_body = ln[:80]
+            break
+
+    title = find([
+        r"\b(Compliance\s+Certificate)\b",
+        r"\b(Verification\s+Certificate)\b",
+        r"\b(Recognition\s+Letter)\b",
+        r"\b(Certificate)\b",
+    ])
+
+    full_name = find([
+        r"confirm\s+that;?\s*\n\s*([A-Z][A-Z\s]{4,60})",
+        r"confirm\s+that;?\s*([A-Z][A-Z\s]{4,60})",
+        r"\bName\s*[:\-]?\s*([A-Z][A-Za-z\s]{3,80})",
+    ])
+
+    issue_date = find([
+        r"Date\s+of\s+Issue\s*[:\-]?\s*([0-9]{1,2}[-\/][0-9]{1,2}[-\/][0-9]{2,4})",
+        r"Issued\s+on\s*[:\-]?\s*([0-9]{1,2}[-\/][0-9]{1,2}[-\/][0-9]{2,4})",
+    ])
+
+    valid_until = find([
+        r"Valid\s+until\s*[:\-]?\s*([0-9]{1,2}[-\/][0-9]{1,2}[-\/][0-9]{2,4})",
+        r"Valid\s+till\s*[:\-]?\s*([0-9]{1,2}[-\/][0-9]{1,2}[-\/][0-9]{2,4})",
+    ])
+
+    status_statement = find([
+        r"is\s+(not\s+a\s+beneficiary[^\.]{0,140}\.)",
+        r"is\s+(a\s+beneficiary[^\.]{0,140}\.)",
+    ])
+
+    # optional contact bits
+    email = find([r"([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})"])
+    website = find([r"\b((?:https?:\/\/)?(?:www\.)?[a-z0-9.-]+\.[a-z]{2,})\b"])
+
+    out = {f: "" for f in TARGET_FIELDS}
+    out.update({
+        "issuing_body": issuing_body,
+        "document_title": title,
+        "certificate_number": cert_no,
+        "full_name": full_name,
+        "national_id": national_id,
+        "issue_date": issue_date,
+        "valid_until": valid_until,
+        "status_statement": status_statement,
+        "contact_email": email,
+        "website": website,
+        "confidence": 0.35,
+        "notes": "Fallback regex extraction used for some fields.",
+    })
+
+    out["missing_fields"] = [k for k in TARGET_FIELDS if not str(out.get(k, "")).strip()]
+    return _normalize(out)
+
+
+def llm_extract_json(raw_text: str) -> Dict[str, Any]:
+    """
+    Calls Ollama and returns best-effort extracted fields.
+    - Never guesses / fabricates
+    - Returns partial fields when available
+    - Falls back to regex extraction if LLM fails or output isn't valid JSON
+    """
+    text = (raw_text or "").strip()
+    if not text:
+        return {"_llm_error": "Empty OCR text", "confidence": 0.0, "missing_fields": TARGET_FIELDS[:]}
+
+    prompt = f"""
+You are an information extraction system.
+Extract ONLY what is explicitly present in the text.
+Do NOT guess. Do NOT invent names, IDs, dates, or numbers.
+If a field is not present or not reliable, return an empty string "" for that field.
+
+Return STRICT JSON ONLY (no markdown, no explanation).
+Keys must match exactly these fields:
+{", ".join(TARGET_FIELDS)}
+
+Also include:
+- confidence: number 0..1 (how complete & clear the extracted info is)
+- missing_fields: list of keys that are empty
+
+Text:
+<<<
+{text[:12000]}
+>>>
+""".strip()
+
+    payload = {
+        "model": MODEL,
+        "prompt": prompt,
+        "stream": False,
+        "options": {
+            "temperature": 0.1,
+            "num_predict": 650,
+        },
     }
 
     try:
-        # Validate extension
-        ext = Path(file.filename).suffix.lower()
-        safe_name = Path(file.filename).name
-        response_payload["filename"] = safe_name
-
-        if ext not in ALLOWED_EXT:
-            response_payload["extracted"] = {
-                "error": "UNSUPPORTED_FILE",
-                "message": f"Unsupported file type: {ext}. Use PDF or image.",
-            }
-            response_payload["legal_document"] = "UNSUPPORTED FILE: Cannot generate verification document."
-            return JSONResponse(status_code=400, content=response_payload)
-
-        # Save uploaded file
-        save_path = UPLOAD_DIR / safe_name
-        with open(save_path, "wb") as f:
-            shutil.copyfileobj(file.file, f)
-
-        # 1) OCR
-        raw_text = extract_text(str(save_path)) or ""
-        raw_text_clean = raw_text.strip()
-
-        extracted = {"_raw_text": raw_text[:8000]}
-
-        # If OCR failed, stop pipeline (NO dummy data)
-        if len(raw_text_clean) < MIN_OCR_CHARS:
-            extracted.update({
-                "_ocr_failed": True,
-                "error": "OCR_FAILED",
-                "message": "OCR could not extract enough readable text. Try a clearer scan (higher quality, less blur/shadow).",
-            })
-            response_payload["extracted"] = extracted
-            response_payload["legal_document"] = "OCR FAILED: Could not generate a verification document."
-            response_payload["pdf_url"] = None
-            return JSONResponse(status_code=200, content=response_payload)
-
-        # 2) LLM extraction (safe)
-        try:
-            llm_data = llm_extract_json(raw_text)
-            if isinstance(llm_data, dict):
-                extracted.update(llm_data)
-            else:
-                extracted["_llm_error"] = "LLM returned non-JSON/dict output"
-        except Exception as e:
-            extracted["_llm_error"] = str(e)
-
-        # 2.5) Ensure HELB-like fields exist (defaults)
-        # Issue date defaults to today if missing
-        if not extracted.get("issue_date"):
-            extracted["issue_date"] = datetime.now().strftime("%d-%m-%Y")
-
-        # Valid until defaults to issue_date + 1 year if missing
-        if not extracted.get("valid_until"):
-            # Try parsing issue_date if it is in dd-mm-YYYY, else fallback to now
-            try:
-                dt_issue = datetime.strptime(extracted["issue_date"], "%d-%m-%Y")
-            except Exception:
-                dt_issue = datetime.now()
-                extracted["issue_date"] = dt_issue.strftime("%d-%m-%Y")
-
-            dt_valid = dt_issue + timedelta(days=365)
-            extracted["valid_until"] = dt_valid.strftime("%d-%m-%Y")
-
-        # Optional: enforce HELB-ish titles if your LLM didn't set them
-        extracted.setdefault("issuing_body", "VERIFICATION AUTHORITY")
-        extracted.setdefault("document_title", "Verification Certificate")
-
-        # 3) Generate letter text (your legal generator)
-        legal_doc = generate_verification_letter(extracted)
-
-        # 4) Generate PDF (HELB-style)
-        doc_id = str(uuid.uuid4())
-        pdf_path = PDF_DIR / f"verification_{doc_id}.pdf"
-        pdf_url = None
-
-        try:
-            generate_verification_pdf(extracted, legal_doc, str(pdf_path))
-            pdf_url = f"/download/{doc_id}"
-        except Exception as e:
-            extracted["_pdf_error"] = str(e)
-
-        response_payload["extracted"] = extracted
-        response_payload["legal_document"] = legal_doc
-        response_payload["pdf_url"] = pdf_url
-
-        return JSONResponse(status_code=200, content=response_payload)
-
+        r = requests.post(OLLAMA_URL, json=payload, timeout=150)
+        r.raise_for_status()
+        resp = (r.json().get("response") or "").strip()
     except Exception as e:
-        # Always return JSON (so frontend never sees null)
-        response_payload["extracted"] = {
-            "error": "PIPELINE_ERROR",
-            "message": str(e),
-            "trace": traceback.format_exc()[:4000],
-        }
-        response_payload["legal_document"] = "SERVER ERROR: Could not generate verification document."
-        response_payload["pdf_url"] = None
-        return JSONResponse(status_code=500, content=response_payload)
+        out = _fallback_extract(text)
+        out["_llm_error"] = f"Ollama call failed: {e}"
+        return out
+
+    parsed = _try_parse_json(resp)
+    if not parsed:
+        out = _fallback_extract(text)
+        out["_llm_error"] = "LLM output was not valid JSON; fallback extraction used."
+        return out
+
+    # ensure missing/confidence exist
+    if "missing_fields" not in parsed:
+        parsed["missing_fields"] = [k for k in TARGET_FIELDS if not str(parsed.get(k, "")).strip()]
+
+    if "confidence" not in parsed:
+        filled = sum(1 for k in TARGET_FIELDS if str(parsed.get(k, "")).strip())
+        parsed["confidence"] = round(min(0.95, 0.25 + (filled / max(1, len(TARGET_FIELDS))) * 0.7), 2)
+
+    return _normalize(parsed)

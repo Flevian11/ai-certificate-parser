@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -9,26 +10,31 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet">
 
-  <!-- Iconify for consistent, sharp icons -->
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
 
   <style>
-    /* ----- design tokens (no theme toggle, robust fixed palette) ----- */
     :root {
-      --primary: #4f46e5;        /* indigo-600 */
-      --primary-light: #818cf8;  /* indigo-400 */
-      --primary-deep: #3730a3;   /* indigo-800 */
-      --accent-teal: #14b8a6;    /* teal-500 */
-      --bg-light: #f8fafc;       /* slate-50 */
-      --bg-card: rgba(255,255,255,0.85);
-      --border-light: #e2e8f0;   /* slate-200 */
-      --text-dark: #0f172a;       /* slate-900 */
-      --text-soft: #475569;       /* slate-600 */
-      --shadow-sm: 0 4px 12px -4px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.02);
-      --shadow-md: 0 20px 28px -8px rgba(79,70,229,0.18), 0 4px 12px rgba(0,0,0,0.02);
+      --primary: #4f46e5;
+      /* indigo-600 */
+      --primary-light: #818cf8;
+      /* indigo-400 */
+      --primary-deep: #3730a3;
+      /* indigo-800 */
+      --accent-teal: #14b8a6;
+      /* teal-500 */
+      --bg-light: #f8fafc;
+      /* slate-50 */
+      --bg-card: rgba(255, 255, 255, 0.85);
+      --border-light: #e2e8f0;
+      /* slate-200 */
+      --text-dark: #0f172a;
+      /* slate-900 */
+      --text-soft: #475569;
+      /* slate-600 */
+      --shadow-sm: 0 4px 12px -4px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
+      --shadow-md: 0 20px 28px -8px rgba(79, 70, 229, 0.18), 0 4px 12px rgba(0, 0, 0, 0.02);
     }
 
-    /* ----- stylistic layered waves (fixed, no theme dependence) ----- */
     .wave-container {
       position: fixed;
       inset: 0;
@@ -39,6 +45,7 @@
       overflow: hidden;
       opacity: 0.5;
     }
+
     .wave-svg {
       position: absolute;
       width: 100%;
@@ -47,30 +54,41 @@
       left: 50%;
       transform: translateX(-50%);
     }
+
     .wave-front {
       top: -15%;
       animation: drift 24s ease-in-out infinite;
       fill: url(#gradFront);
     }
+
     .wave-mid {
       top: -5%;
       animation: drift 30s ease-in-out infinite reverse;
       fill: url(#gradMid);
       opacity: 0.6;
     }
+
     .wave-back {
       top: 5%;
       animation: drift 40s ease-in-out infinite;
       fill: url(#gradBack);
       opacity: 0.4;
     }
+
     @keyframes drift {
-      0% { transform: translateX(-50%) translateY(0px) scale(1); }
-      50% { transform: translateX(-48%) translateY(-22px) scale(1.02); }
-      100% { transform: translateX(-50%) translateY(0px) scale(1); }
+      0% {
+        transform: translateX(-50%) translateY(0px) scale(1);
+      }
+
+      50% {
+        transform: translateX(-48%) translateY(-22px) scale(1.02);
+      }
+
+      100% {
+        transform: translateX(-50%) translateY(0px) scale(1);
+      }
     }
 
-    /* ----- robust glass-card with solid border, always readable ----- */
     .glass-card {
       background: var(--bg-card);
       backdrop-filter: blur(12px) saturate(160%);
@@ -79,19 +97,30 @@
       box-shadow: var(--shadow-sm);
       transition: box-shadow 0.2s ease, transform 0.2s ease;
     }
+
     .glass-card:hover {
       box-shadow: var(--shadow-md);
       transform: translateY(-2px);
     }
 
-    /* custom thin scrollbar (always matches) */
-    .thin-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
-    .thin-scroll::-webkit-scrollbar-track { background: #e9eef3; border-radius: 20px; }
-    .thin-scroll::-webkit-scrollbar-thumb { background: #a5b4fc; border-radius: 20px; }
+    .thin-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
 
-    /* file input consistent styling */
+    .thin-scroll::-webkit-scrollbar-track {
+      background: #e9eef3;
+      border-radius: 20px;
+    }
+
+    .thin-scroll::-webkit-scrollbar-thumb {
+      background: #a5b4fc;
+      border-radius: 20px;
+    }
+
     .file\::file-selector-button {
-      background: #1e293b; /* slate-800 */
+      background: #1e293b;
+      /* slate-800 */
       border: none;
       color: white;
       padding: 0.5rem 1rem;
@@ -102,8 +131,10 @@
       transition: background 0.15s;
       cursor: pointer;
     }
+
     .file\::file-selector-button:hover {
-      background: #0f172a; /* slate-900 */
+      background: #0f172a;
+      /* slate-900 */
     }
 
     /* badge/status indicators */
@@ -115,9 +146,9 @@
     }
   </style>
 </head>
+
 <body class="h-full bg-[#f6f9fe] text-[#0f172a] antialiased">
 
-  <!-- 🌊 fixed wave background (three layers, no theme flicker) -->
   <div class="wave-container">
     <svg class="wave-svg wave-back" viewBox="0 0 1440 800" preserveAspectRatio="none">
       <defs>
@@ -127,7 +158,8 @@
           <stop offset="100%" stop-color="#14b8a6" stop-opacity="0.1" />
         </linearGradient>
       </defs>
-      <path d="M0,280 C260,380 440,150 680,260 C920,370 1080,460 1280,360 C1380,300 1420,250 1440,270 L1440,800 L0,800 Z" />
+      <path
+        d="M0,280 C260,380 440,150 680,260 C920,370 1080,460 1280,360 C1380,300 1420,250 1440,270 L1440,800 L0,800 Z" />
     </svg>
     <svg class="wave-svg wave-mid" viewBox="0 0 1440 800" preserveAspectRatio="none">
       <defs>
@@ -137,7 +169,8 @@
           <stop offset="100%" stop-color="#14b8a6" stop-opacity="0.15" />
         </linearGradient>
       </defs>
-      <path d="M0,350 C220,430 420,270 640,360 C860,450 1000,520 1220,420 C1340,360 1400,300 1440,330 L1440,800 L0,800 Z" />
+      <path
+        d="M0,350 C220,430 420,270 640,360 C860,450 1000,520 1220,420 C1340,360 1400,300 1440,330 L1440,800 L0,800 Z" />
     </svg>
     <svg class="wave-svg wave-front" viewBox="0 0 1440 800" preserveAspectRatio="none">
       <defs>
@@ -147,11 +180,11 @@
           <stop offset="100%" stop-color="#14b8a6" stop-opacity="0.2" />
         </linearGradient>
       </defs>
-      <path d="M0,420 C300,480 520,310 740,390 C960,470 1100,550 1280,460 C1380,400 1420,360 1440,380 L1440,800 L0,800 Z" />
+      <path
+        d="M0,420 C300,480 520,310 740,390 C960,470 1100,550 1280,460 C1380,400 1420,360 1440,380 L1440,800 L0,800 Z" />
     </svg>
   </div>
 
-  <!-- fixed header (no theme toggle, just pure app identity) -->
   <header class="sticky top-0 z-40 border-b border-slate-200/70 bg-white/70 backdrop-blur-xl">
     <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
@@ -162,46 +195,56 @@
         </div>
       </div>
       <div class="flex items-center gap-3 text-xs text-slate-600">
-        <span class="hidden sm:inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Tesseract v5</span>
-        <span class="hidden sm:inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Ollama</span>
-        <span class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 font-medium shadow-sm">⚡ FastAPI</span>
+        <span class="hidden sm:inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          Tesseract v5</span>
+        <span class="hidden sm:inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+          Ollama</span>
+        <span
+          class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 font-medium shadow-sm">⚡
+          FastAPI</span>
       </div>
     </div>
   </header>
 
-  <!-- main container - fully responsive, no theme toggle relics -->
   <main class="max-w-6xl mx-auto px-4 py-8 md:py-12">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
 
-      <!-- LEFT PANEL: upload and hints (glass-card) -->
+      <!-- LEFT PANEL: -->
       <div class="lg:col-span-5 space-y-6">
         <div class="glass-card rounded-3xl p-6">
           <div class="flex items-start justify-between">
             <div>
-              <span class="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50/80 px-3 py-1 text-xs font-bold text-indigo-800">
+              <span
+                class="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50/80 px-3 py-1 text-xs font-bold text-indigo-800">
                 <iconify-icon icon="mdi:lock-outline" class="text-sm"></iconify-icon>
                 offline pipeline
               </span>
               <h2 class="mt-3 text-xl font-black text-slate-800">Upload certificate</h2>
-              <p class="text-sm text-slate-600 mt-1 max-w-xs">PDF, PNG, JPG, WEBP — AI extracts fields & generates verification letter.</p>
+              <p class="text-sm text-slate-600 mt-1 max-w-xs">PDF, PNG, JPG, WEBP — AI extracts fields & generates
+                verification letter.</p>
             </div>
             <!-- static ready badge (always visible) -->
-            <span id="liveBadge" class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+            <span id="liveBadge"
+              class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
               <iconify-icon icon="mdi:check-circle" class="text-sm"></iconify-icon>
               Ready
             </span>
           </div>
 
           <!-- dropzone / input (robust) -->
-          <div id="dropzone" class="mt-6 rounded-2xl border-2 border-dashed border-slate-300 bg-white/60 p-5 transition-colors hover:border-indigo-400">
+          <div id="dropzone"
+            class="mt-6 rounded-2xl border-2 border-dashed border-slate-300 bg-white/60 p-5 transition-colors hover:border-indigo-400">
             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <iconify-icon icon="mdi:cloud-upload-outline" class="text-4xl shrink-0 text-indigo-500"></iconify-icon>
               <div class="w-full">
                 <span class="text-sm font-bold text-slate-700">Drag & drop or click</span>
                 <div class="text-xs text-slate-500">supports PDF, PNG, JPG, WEBP (max 20MB)</div>
                 <div class="mt-3 flex flex-wrap items-center gap-3">
-                  <input id="fileInput" type="file" class="file: block w-full text-sm text-slate-600 file:mr-3 file:rounded-xl file:border-0 file:bg-slate-800 file:px-4 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-slate-900 file:cursor-pointer" accept=".pdf,.png,.jpg,.jpeg,.webp" />
-                  <button id="processBtn" class="whitespace-nowrap inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-indigo-200 hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:pointer-events-none">
+                  <input id="fileInput" type="file"
+                    class="file: block w-full text-sm text-slate-600 file:mr-3 file:rounded-xl file:border-0 file:bg-slate-800 file:px-4 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-slate-900 file:cursor-pointer"
+                    accept=".pdf,.png,.jpg,.jpeg,.webp" />
+                  <button id="processBtn"
+                    class="whitespace-nowrap inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-indigo-200 hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:pointer-events-none">
                     <iconify-icon icon="mdi:play-circle"></iconify-icon> Process
                   </button>
                 </div>
@@ -217,17 +260,20 @@
               <span id="progressPercent">0%</span>
             </div>
             <div class="mt-2 h-2 rounded-full bg-slate-200 overflow-hidden">
-              <div id="progressBar" class="h-full w-0 rounded-full bg-gradient-to-r from-indigo-500 to-teal-400 transition-all duration-300"></div>
+              <div id="progressBar"
+                class="h-full w-0 rounded-full bg-gradient-to-r from-indigo-500 to-teal-400 transition-all duration-300">
+              </div>
             </div>
           </div>
 
           <!-- error display -->
-          <div id="errorBox" class="mt-4 hidden rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 items-start gap-2">
+          <div id="errorBox"
+            class="mt-4 hidden rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 items-start gap-2">
             <iconify-icon icon="mdi:alert-circle" class="text-lg shrink-0"></iconify-icon>
             <span id="errorMsg"></span>
           </div>
 
-          <!-- info cards (always visible, robust) -->
+          <!-- info cards -->
           <div class="mt-6 grid grid-cols-2 gap-3 text-xs">
             <div class="rounded-xl border border-slate-200 bg-white/50 p-3">
               <iconify-icon icon="mdi:scan-helper" class="text-base text-indigo-500"></iconify-icon>
@@ -242,18 +288,19 @@
           </div>
         </div>
 
-        <!-- static backend info card (removed any theme toggle) -->
         <div class="glass-card rounded-2xl p-4 flex flex-wrap gap-4 text-xs text-slate-600">
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Tesseract 5.3</span>
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-teal-500"></span> Ollama (mistral)</span>
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> FastAPI / Uvicorn</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Tesseract
+            5.3</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-teal-500"></span> Ollama
+            (mistral)</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> FastAPI /
+            Uvicorn</span>
         </div>
       </div>
 
       <!-- RIGHT PANEL: tabbed results (glass-card) -->
       <div class="lg:col-span-7">
         <div class="glass-card rounded-3xl p-5 md:p-6">
-          <!-- tab bar (no theme classes) -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
             <div class="flex items-center gap-2">
               <iconify-icon icon="mdi:file-document-outline" class="text-2xl text-indigo-600"></iconify-icon>
@@ -261,40 +308,55 @@
               <span id="resultTimestamp" class="text-xs text-slate-400">—</span>
             </div>
             <div class="flex flex-wrap gap-1 border border-slate-200 p-1 rounded-2xl bg-white/60">
-              <button data-tab="jsonTab" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-50 transition">JSON</button>
-              <button data-tab="docTab" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-50 transition">Document</button>
-              <button data-tab="ocrTab" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-50 transition">OCR text</button>
+              <button data-tab="jsonTab"
+                class="tab-btn px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-50 transition">JSON</button>
+              <button data-tab="docTab"
+                class="tab-btn px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-50 transition">Document</button>
+              <button data-tab="ocrTab"
+                class="tab-btn px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-50 transition">OCR text</button>
             </div>
           </div>
 
           <!-- JSON panel -->
           <div id="jsonPanel" class="tab-content mt-4">
             <div class="flex justify-end mb-2">
-              <button id="copyJsonBtn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white/70 text-xs font-bold hover:bg-indigo-50 transition">
+              <button id="copyJsonBtn"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white/70 text-xs font-bold hover:bg-indigo-50 transition">
                 <iconify-icon icon="mdi:content-copy"></iconify-icon> Copy JSON
               </button>
             </div>
-            <pre id="jsonOutput" class="thin-scroll max-h-[380px] overflow-auto rounded-2xl border border-slate-200 bg-white/70 p-4 text-xs font-mono text-slate-800">No results yet. Upload a file and press Process.</pre>
+            <pre id="jsonOutput"
+              class="thin-scroll max-h-[380px] overflow-auto rounded-2xl border border-slate-200 bg-white/70 p-4 text-xs font-mono text-slate-800">No results yet. Upload a file and press Process.</pre>
           </div>
 
           <!-- Document panel (legal) -->
           <div id="docPanel" class="tab-content hidden mt-4">
             <div class="flex justify-end mb-2">
-              <button id="copyDocBtn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white/70 text-xs font-bold hover:bg-indigo-50 transition">
+              <button id="copyDocBtn"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white/70 text-xs font-bold hover:bg-indigo-50 transition">
                 <iconify-icon icon="mdi:content-copy"></iconify-icon> Copy document
               </button>
+              <span style="margin-left:.3em;"></span>
+              <button id="downloadPdfBtn"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white/70 text-xs font-bold hover:bg-indigo-50 transition disabled:opacity-50"
+                disabled>
+                <iconify-icon icon="mdi:file-download"></iconify-icon> Download PDF
+              </button>
             </div>
-            <pre id="docOutput" class="thin-scroll max-h-[380px] overflow-auto whitespace-pre-wrap rounded-2xl border border-slate-200 bg-white/70 p-4 text-sm font-serif text-slate-800">No verification document yet.</pre>
+            <pre id="docOutput"
+              class="thin-scroll max-h-[380px] overflow-auto rounded-2xl border border-slate-200 bg-white/70 p-4 text-xs font-mono text-slate-800">No verification document yet.</pre>
           </div>
 
           <!-- OCR raw panel -->
           <div id="ocrPanel" class="tab-content hidden mt-4">
             <div class="flex justify-end mb-2">
-              <button id="copyOcrBtn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white/70 text-xs font-bold hover:bg-indigo-50 transition">
+              <button id="copyOcrBtn"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white/70 text-xs font-bold hover:bg-indigo-50 transition">
                 <iconify-icon icon="mdi:content-copy"></iconify-icon> Copy OCR
               </button>
             </div>
-            <pre id="ocrOutput" class="thin-scroll max-h-[380px] overflow-auto whitespace-pre-wrap rounded-2xl border border-slate-200 bg-white/70 p-4 text-xs text-slate-700">No OCR preview.</pre>
+            <pre id="ocrOutput"
+              class="thin-scroll max-h-[380px] overflow-auto whitespace-pre-wrap rounded-2xl border border-slate-200 bg-white/70 p-4 text-xs text-slate-700">No OCR preview.</pre>
           </div>
         </div>
       </div>
@@ -307,178 +369,274 @@
     </div>
   </main>
 
-  <!-- ========== SCRIPT: no theme toggle, robust functionality ========== -->
   <script>
-    (function() {
-      // ----- DOM elements -----
-      const fileInput = document.getElementById('fileInput');
-      const processBtn = document.getElementById('processBtn');
-      const dropzone = document.getElementById('dropzone');
-      const fileMeta = document.getElementById('fileMeta');
-      const progressSection = document.getElementById('progressSection');
-      const progressStatus = document.getElementById('progressStatus');
-      const progressPercent = document.getElementById('progressPercent');
-      const progressBar = document.getElementById('progressBar');
-      const errorBox = document.getElementById('errorBox');
-      const errorMsg = document.getElementById('errorMsg');
-      const liveBadge = document.getElementById('liveBadge');
+  (function () {
+    // ----- DOM elements -----
+    const fileInput = document.getElementById("fileInput");
+    const processBtn = document.getElementById("processBtn");
+    const dropzone = document.getElementById("dropzone");
+    const fileMeta = document.getElementById("fileMeta");
 
-      const jsonOutput = document.getElementById('jsonOutput');
-      const docOutput = document.getElementById('docOutput');
-      const ocrOutput = document.getElementById('ocrOutput');
-      const resultTimestamp = document.getElementById('resultTimestamp');
+    const progressSection = document.getElementById("progressSection");
+    const progressStatus = document.getElementById("progressStatus");
+    const progressPercent = document.getElementById("progressPercent");
+    const progressBar = document.getElementById("progressBar");
 
-      // copy buttons
-      const copyJsonBtn = document.getElementById('copyJsonBtn');
-      const copyDocBtn = document.getElementById('copyDocBtn');
-      const copyOcrBtn = document.getElementById('copyOcrBtn');
+    const errorBox = document.getElementById("errorBox");
+    const errorMsg = document.getElementById("errorMsg");
+    const liveBadge = document.getElementById("liveBadge");
 
-      // tabs
-      const tabBtns = document.querySelectorAll('.tab-btn');
-      const panels = {
-        jsonTab: document.getElementById('jsonPanel'),
-        docTab: document.getElementById('docPanel'),
-        ocrTab: document.getElementById('ocrPanel')
-      };
+    const jsonOutput = document.getElementById("jsonOutput");
+    const docOutput = document.getElementById("docOutput");
+    const ocrOutput = document.getElementById("ocrOutput");
+    const resultTimestamp = document.getElementById("resultTimestamp");
 
-      // ----- helper: set active tab (indicator) -----
-      function setActiveTab(tabId) {
-        Object.entries(panels).forEach(([id, panel]) => {
-          panel.classList.toggle('hidden', id !== tabId);
-        });
-        tabBtns.forEach(btn => {
-          const isActive = btn.dataset.tab === tabId;
-          btn.classList.toggle('bg-indigo-100', isActive);
-          btn.classList.toggle('font-extrabold', isActive);
-        });
-      }
-      tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
+    // copy buttons
+    const copyJsonBtn = document.getElementById("copyJsonBtn");
+    const copyDocBtn = document.getElementById("copyDocBtn");
+    const copyOcrBtn = document.getElementById("copyOcrBtn");
+
+    // download button
+    const downloadPdfBtn = document.getElementById("downloadPdfBtn");
+    let lastPdfUrl = null;
+
+    // smooth progress state
+    let progressTimer = null;
+    let progressValue = 0;
+
+    // tabs
+    const tabBtns = document.querySelectorAll(".tab-btn");
+    const panels = {
+      jsonTab: document.getElementById("jsonPanel"),
+      docTab: document.getElementById("docPanel"),
+      ocrTab: document.getElementById("ocrPanel"),
+    };
+
+    // ----- helper: set active tab -----
+    function setActiveTab(tabId) {
+      Object.entries(panels).forEach(([id, panel]) => {
+        panel.classList.toggle("hidden", id !== tabId);
       });
-      setActiveTab('jsonTab'); // default
-
-      // ----- copy to clipboard (simple) -----
-      async function copyText(text) { try { await navigator.clipboard.writeText(text); } catch (e) {} }
-      copyJsonBtn.addEventListener('click', () => copyText(jsonOutput.innerText));
-      copyDocBtn.addEventListener('click', () => copyText(docOutput.innerText));
-      copyOcrBtn.addEventListener('click', () => copyText(ocrOutput.innerText));
-
-      // ----- file meta update -----
-      function updateFileMeta() {
-        const f = fileInput.files?.[0];
-        if (f) {
-          fileMeta.innerText = `📎 ${f.name}  ·  ${(f.size / 1024).toFixed(1)} KB`;
-          fileMeta.classList.remove('hidden');
-        } else {
-          fileMeta.innerText = '';
-          fileMeta.classList.add('hidden');
-        }
-      }
-      fileInput.addEventListener('change', updateFileMeta);
-
-      // ----- drag & drop -----
-      dropzone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropzone.classList.add('border-indigo-400', 'border-2');
+      tabBtns.forEach((btn) => {
+        const isActive = btn.dataset.tab === tabId;
+        btn.classList.toggle("bg-indigo-100", isActive);
+        btn.classList.toggle("font-extrabold", isActive);
       });
-      dropzone.addEventListener('dragleave', () => {
-        dropzone.classList.remove('border-indigo-400', 'border-2');
-      });
-      dropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('border-indigo-400', 'border-2');
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-          fileInput.files = e.dataTransfer.files;
-          updateFileMeta();
-        }
-      });
+    }
+    tabBtns.forEach((btn) => btn.addEventListener("click", () => setActiveTab(btn.dataset.tab)));
+    setActiveTab("jsonTab");
 
-      // ----- UI helpers (error, progress) -----
-      function showError(msg) {
-        errorMsg.innerText = msg;
-        errorBox.classList.remove('hidden');
-        liveBadge.innerHTML = '<iconify-icon icon="mdi:alert" class="text-sm"></iconify-icon> Error';
-        liveBadge.className = 'inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700';
-      }
-      function clearError() {
-        errorBox.classList.add('hidden');
-        liveBadge.innerHTML = '<iconify-icon icon="mdi:check-circle" class="text-sm"></iconify-icon> Ready';
-        liveBadge.className = 'inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700';
-      }
-      function startProgress(msg) {
-        clearError();
-        progressSection.classList.remove('hidden');
-        progressStatus.innerText = msg;
-        progressPercent.innerText = '5%';
-        progressBar.style.width = '5%';
-        processBtn.disabled = true;
-      }
-      function stepProgress(pct, msg) {
-        progressPercent.innerText = pct + '%';
-        progressBar.style.width = pct + '%';
-        if (msg) progressStatus.innerText = msg;
-      }
-      function stopProgress(success = true) {
-        processBtn.disabled = false;
-        stepProgress(100, success ? 'Complete' : 'Failed');
-        setTimeout(() => {
-          progressSection.classList.add('hidden');
-          progressBar.style.width = '0%';
-          progressPercent.innerText = '0%';
-        }, 500);
-      }
+    // ----- copy to clipboard -----
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (e) {}
+    }
+    copyJsonBtn?.addEventListener("click", () => copyText(jsonOutput.innerText));
+    copyDocBtn?.addEventListener("click", () => copyText(docOutput.innerText));
+    copyOcrBtn?.addEventListener("click", () => copyText(ocrOutput.innerText));
 
-      // ----- main action (no dummy data, always fetches) -----
-      processBtn.addEventListener('click', async () => {
-        const file = fileInput.files?.[0];
-        if (!file) {
-          showError('Please select a file first.');
+    // ----- download PDF (most reliable: navigate to URL) -----
+    if (downloadPdfBtn) {
+      downloadPdfBtn.disabled = true;
+
+      downloadPdfBtn.addEventListener("click", () => {
+        if (!lastPdfUrl) return;
+
+        const absolute = new URL(lastPdfUrl, window.location.origin).toString();
+        window.location.href = absolute; // reliable download/open
+        // window.open(absolute, "_blank"); // optional new tab
+      });
+    }
+
+    // ----- file meta update -----
+    function updateFileMeta() {
+      const f = fileInput?.files?.[0];
+      if (f) {
+        const kb = (f.size / 1024).toFixed(1);
+        fileMeta.innerText = `📎 ${f.name}  ·  ${kb} KB`;
+      } else {
+        fileMeta.innerText = "";
+      }
+    }
+    fileInput?.addEventListener("change", updateFileMeta);
+
+    // ----- drag & drop -----
+    dropzone?.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.classList.add("border-indigo-400", "border-2");
+    });
+    dropzone?.addEventListener("dragleave", () => {
+      dropzone.classList.remove("border-indigo-400", "border-2");
+    });
+    dropzone?.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("border-indigo-400", "border-2");
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        fileInput.files = e.dataTransfer.files;
+        updateFileMeta();
+      }
+    });
+
+    // ----- UI helpers -----
+    function showError(msg) {
+      errorMsg.innerText = msg;
+      errorBox.classList.remove("hidden");
+
+      if (liveBadge) {
+        liveBadge.innerHTML =
+          '<iconify-icon icon="mdi:alert" class="text-sm"></iconify-icon> Error';
+        liveBadge.className =
+          "inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700";
+      }
+    }
+
+    function clearError() {
+      errorBox.classList.add("hidden");
+
+      if (liveBadge) {
+        liveBadge.innerHTML =
+          '<iconify-icon icon="mdi:check-circle" class="text-sm"></iconify-icon> Ready';
+        liveBadge.className =
+          "inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700";
+      }
+    }
+
+    function startProgress(msg) {
+      clearError();
+
+      if (progressTimer) clearInterval(progressTimer);
+      progressTimer = null;
+      progressValue = 0;
+
+      progressSection.classList.remove("hidden");
+      progressStatus.innerText = msg || "Starting…";
+      progressPercent.innerText = "0%";
+      progressBar.style.width = "0%";
+
+      processBtn.disabled = true;
+    }
+
+    function stepProgress(pct, msg) {
+      progressValue = Math.max(progressValue, Math.min(99, pct)); // cap at 99 until done
+      progressPercent.innerText = progressValue + "%";
+      progressBar.style.width = progressValue + "%";
+      if (msg) progressStatus.innerText = msg;
+    }
+
+    function startSmoothProgress(fromPct, toPct, msg, step = 1, intervalMs = 220) {
+      if (progressTimer) clearInterval(progressTimer);
+
+      progressValue = Math.max(progressValue, fromPct);
+      stepProgress(progressValue, msg);
+
+      progressTimer = setInterval(() => {
+        if (progressValue >= toPct) {
+          clearInterval(progressTimer);
+          progressTimer = null;
           return;
         }
+        progressValue = Math.min(toPct, progressValue + step);
+        stepProgress(progressValue);
+      }, intervalMs);
+    }
 
-        startProgress('Uploading...');
-        stepProgress(18, 'Uploading...');
+    function stopProgress(success = true) {
+      if (progressTimer) clearInterval(progressTimer);
+      progressTimer = null;
 
-        const formData = new FormData();
-        formData.append('file', file);
+      progressValue = 100;
+      progressPercent.innerText = "100%";
+      progressBar.style.width = "100%";
+      progressStatus.innerText = success ? "Complete" : "Failed";
 
-        try {
-          stepProgress(35, 'Calling /upload (OCR + AI)');
-          const response = await fetch('/upload', { method: 'POST', body: formData });
+      processBtn.disabled = false;
 
-          if (!response.ok) {
-            const errText = await response.text();
-            throw new Error(errText || `HTTP ${response.status}`);
-          }
+      setTimeout(() => {
+        progressSection.classList.add("hidden");
+        progressBar.style.width = "0%";
+        progressPercent.innerText = "0%";
+        progressValue = 0;
+      }, 700);
+    }
 
-          stepProgress(65, 'Processing response');
-          const data = await response.json();
+    // ----- main action -----
+    processBtn?.addEventListener("click", async () => {
+      const file = fileInput?.files?.[0];
+      if (!file) {
+        showError("Please select a file first.");
+        return;
+      }
 
-          const extracted = data.extracted || {};
-          jsonOutput.innerText = JSON.stringify(extracted, null, 2) || '{}';
-          docOutput.innerText = data.legal_document || '(no legal document)';
-          ocrOutput.innerText = extracted._raw_text || '(raw text not returned)';
+      // reset pdf state each run
+      lastPdfUrl = null;
+      if (downloadPdfBtn) downloadPdfBtn.disabled = true;
 
-          // optional debug fetch for raw text if missing
-          if (!extracted._raw_text) {
-            stepProgress(80, 'Fetching OCR preview...');
-            try {
-              const debugResp = await fetch('/debug-text', { method: 'POST', body: formData });
-              if (debugResp.ok) {
-                const debugData = await debugResp.json();
-                ocrOutput.innerText = debugData.text_preview || ocrOutput.innerText;
-              }
-            } catch (debugErr) { /* ignore */ }
-          }
+      startProgress("Preparing upload…");
 
-          resultTimestamp.innerText = `updated: ${new Date().toLocaleTimeString()}`;
-          stopProgress(true);
-        } catch (err) {
-          stopProgress(false);
-          showError(err?.message || 'Network / server error.');
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Stage 1: Uploading (5 → 25)
+      startSmoothProgress(5, 25, "Uploading file…", 2, 160);
+
+      // Start request but DO NOT await immediately (so UI can animate)
+      const uploadPromise = fetch("/upload", { method: "POST", body: formData });
+
+      // Stage 2: OCR (25 → 45)
+      setTimeout(() => {
+        if (processBtn.disabled) startSmoothProgress(25, 45, "Running OCR (Tesseract)…", 1, 220);
+      }, 900);
+
+      // Stage 3: LLM (45 → 88) – slow stage
+      setTimeout(() => {
+        if (processBtn.disabled)
+          startSmoothProgress(45, 88, "LLM extracting fields (Ollama · phi3)…", 1, 320);
+      }, 2200);
+
+      try {
+        const response = await uploadPromise;
+
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(errText || `HTTP ${response.status}`);
         }
-      });
-    })();
-  </script>
+
+        // Stage 4: finalize (88 → 99)
+        startSmoothProgress(88, 99, "Finalizing document + PDF…", 1, 160);
+
+        const data = await response.json().catch(() => null);
+        if (!data) throw new Error("Server returned non-JSON response.");
+
+        const extracted = data.extracted || {};
+
+        jsonOutput.innerText = JSON.stringify(extracted, null, 2) || "{}";
+        docOutput.innerText = data.legal_document || "(no legal document)";
+        ocrOutput.innerText = extracted._raw_text || "(raw text not returned)";
+
+        // enable PDF download if backend returned URL
+        if (data.pdf_url) {
+          lastPdfUrl = data.pdf_url;
+          if (downloadPdfBtn) downloadPdfBtn.disabled = false;
+        } else {
+          lastPdfUrl = null;
+          if (downloadPdfBtn) downloadPdfBtn.disabled = true;
+
+          // show backend PDF error if present
+          if (extracted && extracted._pdf_error) {
+            showError("PDF generation failed: " + extracted._pdf_error);
+          }
+        }
+
+        resultTimestamp.innerText = `updated: ${new Date().toLocaleTimeString()}`;
+        stopProgress(true);
+      } catch (err) {
+        stopProgress(false);
+        showError(err?.message || "Network / server error.");
+      }
+    });
+  })();
+</script>
 </body>
+
 </html>
