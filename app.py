@@ -2,12 +2,21 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse
 import os, shutil
 from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from parser import extract_text
 from ollama_client import llm_extract_json
 from legal_generator import generate_verification_letter
 
 app = FastAPI(title="AI Certificate Parser + Legal Doc Generator")
+
+# Serve static UI files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/ui")
+def ui():
+    return FileResponse("static/index.html")
 
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -56,6 +65,8 @@ async def upload(file: UploadFile = File(...)):
     extracted = llm_extract_json(raw_text)
 
     legal_doc = generate_verification_letter(extracted)
+
+    extracted["_raw_text"] = raw_text[:8000]  # keep it light
 
     return {
         "filename": file.filename,
