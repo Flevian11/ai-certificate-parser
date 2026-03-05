@@ -10,21 +10,28 @@ def llm_extract_json(raw_text: str) -> dict:
     Sends certificate text to Ollama and returns extracted fields as JSON dict.
     """
     prompt = f"""
-You are an information extraction system.
-Extract these fields from the certificate text, return VALID JSON ONLY:
+You are a document information extraction system.
 
-- full_name
-- institution
-- course_or_program
-- certificate_id
-- issue_date
+Extract structured data from the certificate text.
+
+Return ONLY valid JSON with these fields:
+
+{{
+ "full_name": "",
+ "institution": "",
+ "degree_or_certificate": "",
+ "certificate_number": "",
+ "issue_date": "",
+ "issuing_body": ""
+}}
 
 Rules:
-- If missing, use null.
-- issue_date should be ISO format YYYY-MM-DD if possible, else null.
-- Output JSON only, no explanations.
+- If a value is missing, return null
+- issue_date must be formatted YYYY-MM-DD if possible
+- Do NOT include explanations
+- Only return JSON
 
-CERTIFICATE TEXT:
+Certificate text:
 {raw_text}
 """.strip()
 

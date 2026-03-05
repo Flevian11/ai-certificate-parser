@@ -19,6 +19,24 @@ ALLOWED_EXT = {".pdf", ".png", ".jpg", ".jpeg", ".webp"}
 def home():
     return {"status": "ok", "message": "Upload a certificate to /upload"}
 
+@app.get("/health")
+def health():
+    return {"status": "healthy"}
+
+
+@app.post("/debug-text")
+async def debug_text(file: UploadFile = File(...)):
+    ext = Path(file.filename).suffix.lower()
+    if ext not in ALLOWED_EXT:
+        return JSONResponse(status_code=400, content={"error": f"Unsupported file type: {ext}"})
+
+    save_path = UPLOAD_DIR / file.filename
+    with open(save_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    raw_text = extract_text(str(save_path))
+    return {"filename": file.filename, "text_preview": raw_text[:2000]}
+
 
 @app.post("/upload")
 async def upload(file: UploadFile = File(...)):
