@@ -1,42 +1,45 @@
-# AI Certificate Parser & Legal Document Generator
+# AI Certificate Parser
 
-This project demonstrates an AI-powered pipeline for parsing academic certificates and generating verification documents.
+AI-powered system that parses certificates and generates legal verification documents.
 
 ## Features
 
-- Upload certificate PDF or image
-- Extract text using OCR (Tesseract)
-- Use local LLM (Ollama) to extract structured data
-- Generate legal verification documents automatically
-
-## Tech Stack
-
-FastAPI  
-Python  
-Tesseract OCR  
-Ollama (Local LLM)  
-pdfplumber
+- Upload certificate (PDF / Image)
+- OCR extraction using **Tesseract**
+- AI structured data extraction using **Ollama LLM**
+- Automatic **verification letter generation**
+- Clean **FastAPI backend**
+- Modern **UI dashboard**
 
 ## Architecture
 
-Upload → OCR → LLM Extraction → Structured JSON → Legal Document Generation
+Upload → OCR → AI Extraction → Structured JSON → Legal Document
 
-## Example Fields Extracted
+## Tech Stack
 
-- Full Name
-- Institution
-- Degree / Certificate
-- Certificate Number
-- Issue Date
-- Issuing Body
+- Python
+- FastAPI
+- Tesseract OCR
+- Ollama (Local LLM)
+- pdfplumber
+- Tailwind UI
 
 ## Run Locally
 
 ```bash
 uvicorn app:app --reload
 
-Then open:
+Open UI:
 
-http://127.0.0.1:8000/docs
+http://127.0.0.1:8000/ui
+Example Fields Extracted
 
-Upload a certificate using the /upload endpoint.
+Full Name
+
+Institution
+
+Certificate Number
+
+Degree / Qualification
+
+Issue Date
